@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hardware Undercover - Sipil, Srigala & Mister White</title>
+<style>
+:root{--bg:#060a18;--ink:#d8f3ff;--card:#0d1630;--a:#00e5ff;--b:#39ff88;--c:#ffd400;--d:#b026ff;--pk:#ff3d81;--ln:#1d3a6b}
+*{box-sizing:border-box}
+body{margin:0;font-family:Consolas,"Courier New",monospace;color:var(--ink);min-height:100vh;background:var(--bg) linear-gradient(rgba(0,229,255,.06) 1px,transparent 1px) 0 0/34px 34px,linear-gradient(90deg,rgba(0,229,255,.06) 1px,transparent 1px) 0 0/34px 34px}
+h1,h2,h3{margin:.25em 0}
+button{font:inherit;font-weight:700;border:2px solid var(--a);border-radius:10px;padding:12px 20px;font-size:1rem;cursor:pointer;background:#08243a;color:var(--a);box-shadow:0 0 12px rgba(0,229,255,.35)}
+button:hover{background:var(--a);color:#021018}
+button:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+button.alt{border-color:var(--b);color:var(--b);background:#06281a}button.alt:hover{background:var(--b);color:#021008}
+button.gh{border-color:var(--ln);color:var(--ink);background:#101c3a;box-shadow:none;padding:8px 14px;font-size:.9rem}button.gh:hover{background:var(--ln)}
+button.on{background:var(--a);color:#021018}
+button.dg{border-color:var(--pk);color:var(--pk);background:#2a0c1c;box-shadow:none;padding:8px 14px;font-size:.9rem}button.dg:hover{background:var(--pk);color:#1a0610}
+button:focus-visible,input:focus-visible{outline:3px solid var(--c);outline-offset:2px}
+.screen{display:none;max-width:680px;margin:0 auto;padding:14px}.screen.on{display:block}
+.center{text-align:center}
+.card{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:18px;margin:10px 0;box-shadow:0 0 22px rgba(0,229,255,.12)}
+#s-home{text-align:center;padding-top:6vh}
+#s-home h1{font-size:clamp(1.8rem,7vw,3rem);color:var(--a);text-shadow:0 0 18px rgba(0,229,255,.7)}
+.meta{color:#8fb4d8;font-size:.9rem;margin:.4em 0 1em}
+.row{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin:10px 0}
+.pl{display:flex;gap:8px;align-items:center;margin:7px 0}
+.pl input{flex:1;font:inherit;padding:10px;border-radius:8px;border:2px solid var(--ln);background:#050a1a;color:var(--ink);min-width:0}
+.pl span{width:26px;text-align:right;color:#6f9ac4}
+.word{font-size:clamp(1.8rem,8vw,3rem);font-weight:800;color:var(--c);text-shadow:0 0 16px rgba(255,212,0,.6);margin:.4em 0;word-break:break-word}
+.role{display:inline-block;padding:3px 12px;border-radius:99px;font-weight:800;font-size:.9rem}
+.r-s{background:#0a5c30;color:#bfffd9}.r-w{background:#6a1230;color:#ffd0e0}.r-m{background:#e8e8f5;color:#111}
+.prow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border:1px solid var(--ln);border-radius:10px;margin:6px 0;background:#0a1330}
+.prow.out{opacity:.45;text-decoration:line-through}
+.modal{position:fixed;inset:0;background:rgba(2,5,15,.85);display:none;align-items:center;justify-content:center;padding:14px;z-index:9}
+.modal.on{display:flex}
+.modal .card{max-width:480px;width:100%;border-color:var(--a)}
+.modal input{width:100%;font:inherit;padding:12px;border-radius:8px;border:2px solid var(--ln);background:#050a1a;color:var(--ink);margin:10px 0}
+table{width:100%;border-collapse:collapse;font-size:.9rem}td,th{padding:5px 6px;border-bottom:1px solid var(--ln);text-align:left}
+.conf{position:fixed;top:-20px;width:10px;height:14px;animation:fall 3s linear forwards;z-index:20}
+@keyframes fall{to{transform:translateY(110vh) rotate(720deg)}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style></head><body>
+
+<section id="s-home" class="screen on">
+<div style="font-size:4rem" aria-hidden="true">🖥️🐺⚪</div>
+<h1 id="ttl"></h1><p class="meta" id="info"></p>
+<div class="row"><button id="b-start">Mulai</button><button class="gh" id="b-help">Cara bermain</button></div>
+</section>
+
+<section id="s-setup" class="screen"><div class="card">
+<h2>Pengaturan permainan</h2>
+<p class="meta">Pemain (3–12 orang), satu perangkat dipakai bergantian.</p>
+<div id="names"></div>
+<div class="row"><button class="gh" id="b-minus">− Kurangi</button><button class="gh" id="b-plus">+ Tambah</button></div>
+<p>Kategori kata:</p><div class="row" id="cats"></div>
+<div class="row"><button class="gh" id="b-mw"></button></div>
+<p class="meta center" id="roles"></p>
+<div class="row"><button class="gh" id="b-back">Kembali</button><button class="alt" id="b-go">Mulai ronde</button></div>
+</div></section>
+
+<section id="s-reveal" class="screen"><div class="card center">
+<div class="meta" id="rv-n"></div><h2 id="rv-who"></h2>
+<div id="rv-card"></div>
+<div class="row"><button id="b-see">Lihat kata rahasia</button><button class="alt" id="b-hide" style="display:none">Sembunyikan &amp; lanjut</button></div>
+<p class="meta">Pastikan hanya pemain ini yang melihat layar.</p>
+</div></section>
+
+<section id="s-play" class="screen">
+<div class="card"><h2 id="pl-t"></h2>
+<p>Urutan bicara: <b id="order"></b></p>
+<p class="meta">Setiap pemain menyebut <b>satu kata atau kalimat singkat</b> (atau menggambar sketsa sederhana di papan tulis/kertas) sebagai petunjuk tanpa menyebut nama kata rahasianya. Setelah semua bicara, diskusikan, lalu eliminasi pemain yang paling dicurigai.</p></div>
+<div id="plist"></div>
+<div class="row"><button class="gh" id="b-h2">Cara bermain</button><button class="gh" id="b-re">Ronde baru</button><button class="gh" id="b-exit">Keluar</button></div>
+</section>
+
+<section id="s-end" class="screen"><div class="card center"><h2 id="en-t"></h2><p id="en-s"></p></div>
+<div class="card"><h3>Peran &amp; kata</h3><div id="en-roles"></div></div>
+<div class="card"><h3>Pembahasan</h3><p id="en-e"></p></div>
+<div class="card"><h3>Papan skor</h3><div id="en-sc"></div></div>
+<div class="row"><button class="alt" id="b-next">Ronde berikutnya</button><button class="gh" id="b-set">Ubah pengaturan</button><button class="gh" id="b-ex2">Keluar</button></div>
+</section>
+
+<div class="modal" id="m-i"><div class="card"><h3 id="mi-t"></h3><div id="mi-b"></div><div class="center"><button id="mi-ok">OK</button></div></div></div>
+<div class="modal" id="m-g"><div class="card"><h3>⚪ Mister White: tebak kata sipil!</h3><p>Kalau tebakanmu benar, kamu langsung menang.</p><input id="g-in" autocomplete="off" aria-label="Tebakan kata sipil" placeholder="Ketik tebakanmu"><div class="center"><button id="g-ok">Tebak</button></div></div></div>
+
+<script>
+/* ========== KONFIGURASI GURU ========== */
+const CONFIG={
+ judul:"Hardware Undercover",
+ deskripsi:"Sipil, Srigala & Mister White · Materi Hardware Komputer",
+ skor:{sipil:1,srigala:3,mw:3,mwTebak:5},
+ srigalaTahuPeran:false, // true: srigala diberi tahu bahwa dirinya srigala
+ // [kategori, kata A, kata B, pembahasan]  kategori: dl (komponen dalam) | lr (perangkat luar & jaringan)
+ pasang:[
+ ["dl","RAM","SSD","RAM adalah memori kerja sementara yang cepat dan hilang saat komputer mati, sedangkan SSD menyimpan data permanen."],
+ ["dl","CPU","GPU","CPU memproses instruksi umum (otak komputer), sedangkan GPU mengolah grafis dan perhitungan paralel."],
+ ["dl","HDD","SSD","HDD memakai piringan magnetik yang berputar, sedangkan SSD memakai memori flash tanpa bagian bergerak sehingga lebih cepat dan senyap."],
+ ["dl","Motherboard","PSU","Motherboard adalah papan induk yang menghubungkan semua komponen, sedangkan PSU menyuplai daya listrik."],
+ ["dl","Heatsink","Kipas","Heatsink adalah logam yang menyerap dan menyebarkan panas, sedangkan kipas mengalirkan udara untuk membuangnya."],
+ ["dl","VGA Card","Sound Card","VGA card mengolah tampilan grafis ke monitor, sedangkan sound card mengolah suara."],
+ ["dl","LAN Card","Wi-Fi Card","LAN card menghubungkan komputer ke jaringan lewat kabel, sedangkan Wi-Fi card lewat sinyal nirkabel."],
+ ["dl","NVMe SSD","SATA SSD","NVMe SSD umumnya dipasang di slot M.2/PCIe dan lebih cepat, sedangkan SATA SSD memakai kabel SATA."],
+ ["dl","RAM","Prosesor","RAM menampung data dan program yang sedang dipakai, sedangkan prosesor mengeksekusi instruksinya."],
+ ["lr","Keyboard","Mouse","Keyboard memasukkan teks dan perintah lewat tombol, sedangkan mouse menggerakkan penunjuk dan memilih objek."],
+ ["lr","Monitor","Proyektor","Monitor menampilkan gambar pada layar sendiri, sedangkan proyektor memancarkan gambar ke layar atau dinding."],
+ ["lr","Printer","Scanner","Printer mencetak dokumen digital ke kertas, sedangkan scanner mengubah dokumen kertas menjadi file digital."],
+ ["lr","Flashdisk","Harddisk Eksternal","Flashdisk kecil dan berkapasitas lebih kecil, sedangkan harddisk eksternal lebih besar kapasitasnya dan biasanya lebih besar fisiknya."],
+ ["lr","Speaker","Headset","Speaker memutar suara ke ruangan, sedangkan headset dipakai di telinga dan umumnya dilengkapi mikrofon."],
+ ["lr","Webcam","Mikrofon","Webcam menangkap gambar video, sedangkan mikrofon menangkap suara."],
+ ["lr","Router","Switch","Router menghubungkan antar jaringan (termasuk ke internet), sedangkan switch menghubungkan perangkat dalam satu jaringan lokal."],
+ ["lr","Modem","Router","Modem menghubungkan jaringan rumah ke penyedia internet, sedangkan router membagi koneksi ke banyak perangkat."],
+ ["lr","Hub","Switch","Hub meneruskan data ke semua port, sedangkan switch meneruskannya hanya ke port tujuan."],
+ ["lr","Kabel HDMI","Kabel VGA","HDMI membawa gambar dan suara digital, sedangkan VGA membawa gambar analog tanpa suara."],
+ ["lr","Kabel UTP","Kabel Fiber Optik","Kabel UTP mengirim sinyal listrik lewat tembaga, sedangkan fiber optik mengirim cahaya lewat serat kaca."],
+ ["lr","Touchpad","Mouse","Touchpad adalah permukaan sentuh bawaan laptop, sedangkan mouse perangkat terpisah yang digerakkan di meja."],
+ ["lr","Access Point","Repeater","Access point membuat titik Wi-Fi dari jaringan kabel, sedangkan repeater memperkuat dan memperluas sinyal Wi-Fi yang sudah ada."],
+ ["lr","Laptop","PC Desktop","Laptop portabel dengan layar, keyboard, dan baterai menyatu, sedangkan PC desktop terdiri dari casing dan perangkat terpisah."],
+ ["lr","UPS","Stabilizer","UPS memberi cadangan daya dari baterai saat listrik padam, sedangkan stabilizer menstabilkan tegangan listrik."],
+ ["lr","Printer Inkjet","Printer Laser","Printer inkjet menyemprotkan tinta cair, sedangkan printer laser memakai toner bubuk dan panas."],
+ ["lr","Charger","Powerbank","Charger mengisi daya dari listrik PLN, sedangkan powerbank adalah baterai portabel pengisi daya."],
+ ["lr","Kabel USB","Kabel LAN","Kabel USB menghubungkan perangkat seperti flashdisk dan mouse, sedangkan kabel LAN menghubungkan perangkat ke jaringan."],
+ ["lr","Kamera CCTV","Webcam","CCTV dipasang tetap untuk memantau area, sedangkan webcam dipakai untuk video call lewat komputer."]
+ ]
+};
+/* ========== MESIN GAME ========== */
+const $=id=>document.getElementById(id);
+const sh=a=>a.map(v=>[Math.random(),v]).sort((x,y)=>x[0]-y[0]).map(x=>x[1]);
+const norm=s=>String(s).toLowerCase().replace(/[^a-z0-9]/g,"");
+const RN={s:"Sipil",w:"Srigala",m:"Mister White"},RC={s:"r-s",w:"r-w",m:"r-m"};
+let names=["Pemain 1","Pemain 2","Pemain 3","Pemain 4"],cat="all",mw=true;
+let P=[],deck=[],pair=null,ri=0,order=[],round=0,over=true;
+function show(id){document.querySelectorAll(".screen").forEach(s=>s.classList.remove("on"));$(id).classList.add("on")}
+function infoP(t,b){return new Promise(r=>{$("mi-t").textContent=t;$("mi-b").innerHTML=b;$("m-i").classList.add("on");$("mi-ok").onclick=()=>{$("m-i").classList.remove("on");r()}})}
+const HELP="<p><b>Peran:</b><br>🟢 <b>Sipil</b>: mendapat kata yang sama.<br>🔴 <b>Srigala</b>: mendapat kata yang mirip tapi berbeda"+(CONFIG.srigalaTahuPeran?" (dan tahu bahwa dirinya srigala)":", tanpa tahu bahwa dirinya srigala")+".<br>⚪ <b>Mister White</b>: tidak mendapat kata sama sekali.</p><p><b>Tips hardware:</b> petunjuk boleh berupa ciri bentuk, fungsi, letak, atau gambar sketsa, asal tidak menyebut nama bendanya.</p><p><b>Alur:</b> tiap pemain melihat kata rahasianya secara bergiliran. Lalu setiap pemain menyebut satu petunjuk tentang katanya tanpa menyebut kata itu. Setelah diskusi, kelas memilih satu pemain untuk dieliminasi dan perannya dibuka.</p><p><b>Menang:</b><br>Sipil menang jika semua Srigala dan Mister White tersingkir.<br>Srigala dan Mister White menang jika jumlah mereka sama dengan atau lebih banyak dari sipil yang tersisa.<br>Mister White yang tereliminasi bisa langsung menang dengan menebak kata sipil.</p>";
+$("ttl").textContent=CONFIG.judul;$("info").textContent=CONFIG.deskripsi;
+$("b-help").onclick=$("b-h2").onclick=()=>infoP("Cara bermain",HELP);
+$("b-start").onclick=()=>{show("s-setup");drawSetup()};$("b-back").onclick=()=>show("s-home");
+/* setup */
+function counts(n){const m=mw&&n>=5?1:0,w=n>=10?2:1;return{w,m,s:n-w-m}}
+function readNames(){names=[...document.querySelectorAll(".pl input")].map((i,k)=>i.value.trim()||"Pemain "+(k+1))}
+function drawSetup(){
+ const n=names.length;$("names").innerHTML=names.map((v,i)=>'<div class="pl"><span>'+(i+1)+'</span><input maxlength="14" aria-label="Nama pemain '+(i+1)+'" value="'+v.replace(/"/g,"&quot;")+'"></div>').join("");
+ $("b-minus").disabled=n<=3;$("b-plus").disabled=n>=12;
+ $("cats").innerHTML="";[["all","Campuran"],["dl","Komponen Dalam"],["lr","Perangkat Luar & Jaringan"]].forEach(([k,t])=>{const b=document.createElement("button");b.className="gh"+(cat===k?" on":"");b.textContent=t;b.onclick=()=>{readNames();cat=k;drawSetup()};$("cats").appendChild(b)});
+ const can=n>=5;$("b-mw").textContent="Mister White: "+(can?(mw?"Aktif":"Nonaktif"):"butuh minimal 5 pemain");$("b-mw").disabled=!can;$("b-mw").className="gh"+(mw&&can?" on":"");
+ const c=counts(n);$("roles").textContent="Komposisi: "+c.s+" Sipil, "+c.w+" Srigala"+(c.m?", 1 Mister White":"")}
+$("b-plus").onclick=()=>{readNames();names.push("Pemain "+(names.length+1));drawSetup()};
+$("b-minus").onclick=()=>{readNames();names.pop();drawSetup()};
+$("b-mw").onclick=()=>{readNames();mw=!mw;drawSetup()};
+$("b-go").onclick=()=>{readNames();try{localStorage.setItem("uc-names",JSON.stringify(names))}catch(e){}
+ P=names.map(n=>({n,r:"s",w:"",out:false,sc:0}));round=0;deck=[];newRound()};
+$("b-set").onclick=()=>{show("s-setup");drawSetup()};
+/* ronde */
+function newRound(){
+ const pool=CONFIG.pasang.map((p,i)=>i).filter(i=>cat==="all"||CONFIG.pasang[i][0]===cat);
+ deck=deck.filter(i=>pool.includes(i));if(!deck.length)deck=sh(pool);
+ const p=CONFIG.pasang[deck.pop()],f=Math.random()<.5;pair={a:f?p[1]:p[2],b:f?p[2]:p[1],e:p[3]};
+ const c=counts(P.length),idx=sh(P.map((_,i)=>i));round++;over=false;
+ P.forEach(x=>{x.out=false;x.r="s";x.w=pair.a});
+ idx.slice(0,c.w).forEach(i=>{P[i].r="w";P[i].w=pair.b});
+ if(c.m)idx.slice(c.w,c.w+1).forEach(i=>{P[i].r="m";P[i].w=""});
+ const off=Math.floor(Math.random()*P.length);order=P.map((_,i)=>(i+off)%P.length);
+ ri=0;show("s-reveal");drawReveal()}
+function drawReveal(){
+ $("rv-n").textContent="Ronde "+round+" · pemain "+(ri+1)+" dari "+P.length;$("rv-who").textContent="Serahkan perangkat ke: "+P[ri].n;
+ $("rv-card").innerHTML="";$("b-see").style.display="";$("b-hide").style.display="none"}
+$("b-see").onclick=()=>{const p=P[ri];
+ $("rv-card").innerHTML=p.r==="m"?'<span class="role r-m">⚪ Mister White</span><p>Kamu <b>tidak punya kata</b>. Dengarkan petunjuk lain dan samarkan dirimu!</p>':
+  (CONFIG.srigalaTahuPeran&&p.r==="w"?'<span class="role r-w">🔴 Srigala</span>':"")+'<p class="meta">Kata rahasiamu:</p><div class="word">'+p.w+"</div>";
+ $("b-see").style.display="none";$("b-hide").style.display="";$("b-hide").textContent=ri===P.length-1?"Sembunyikan & mulai diskusi":"Sembunyikan & lanjut"};
+$("b-hide").onclick=()=>{ri++;if(ri>=P.length){show("s-play");drawPlay()}else drawReveal()};
+/* diskusi & eliminasi */
+function drawPlay(){
+ const alive=P.filter(p=>!p.out);$("pl-t").textContent="Ronde "+round+" · diskusi";
+ $("order").textContent=order.filter(i=>!P[i].out).map(i=>P[i].n).join(" → ");
+ $("plist").innerHTML="";
+ P.forEach((p,i)=>{const d=document.createElement("div");d.className="prow"+(p.out?" out":"");
+  d.innerHTML="<span>"+p.n+(p.out?' <span class="role '+RC[p.r]+'">'+RN[p.r]+"</span>":"")+"</span>";
+  if(!p.out){const b=document.createElement("button");b.className="dg";b.textContent="Eliminasi";b.onclick=()=>elim(i);d.appendChild(b)}
+  $("plist").appendChild(d)})}
+async function elim(i){
+ const p=P[i];if(over||!confirm("Eliminasi "+p.n+"?"))return;p.out=true;
+ await infoP(p.n+" tereliminasi",'<p>Perannya: <span class="role '+RC[p.r]+'">'+RN[p.r]+"</span></p>");
+ if(p.r==="m"){const g=await guess();if(norm(g)===norm(pair.a))return finish("m",true)}
+ const al=P.filter(x=>!x.out),bad=al.filter(x=>x.r!=="s").length,civ=al.length-bad;
+ if(bad===0)return finish("s");
+ if(civ<=bad)return finish(al.some(x=>x.r==="w")?"w":"m");
+ drawPlay()}
+function guess(){return new Promise(r=>{$("g-in").value="";$("m-g").classList.add("on");$("g-in").focus();$("g-ok").onclick=()=>{$("m-g").classList.remove("on");r($("g-in").value)}})}
+/* akhir ronde */
+function finish(w,tebak){
+ over=true;const S=CONFIG.skor;
+ P.forEach(p=>{if(w==="s"&&p.r==="s")p.sc+=S.sipil;
+  else if(w==="w"&&!p.out&&p.r!=="s")p.sc+=p.r==="w"?S.srigala:S.mw;
+  else if(w==="m"&&p.r==="m")p.sc+=tebak?S.mwTebak:S.mw});
+ $("en-t").textContent=w==="s"?"🟢 Sipil menang!":w==="w"?"🔴 Srigala menang!":"⚪ Mister White menang!";
+ $("en-s").textContent=tebak?"Mister White menebak kata sipil dengan benar!":w==="s"?"Semua penyusup berhasil ditemukan.":"Penyusup bertahan sampai akhir.";
+ $("en-roles").innerHTML="<table>"+P.map(p=>'<tr><td>'+p.n+'</td><td><span class="role '+RC[p.r]+'">'+RN[p.r]+"</span></td><td>"+(p.w||"—")+"</td></tr>").join("")+"</table>";
+ $("en-e").innerHTML="<b>"+pair.a+"</b> (sipil) vs <b>"+pair.b+"</b> (srigala):<br>"+pair.e;
+ $("en-sc").innerHTML="<table>"+[...P].sort((a,b)=>b.sc-a.sc).map(p=>"<tr><td>"+p.n+"</td><td>"+p.sc+" poin</td></tr>").join("")+"</table>";
+ for(let i=0;i<70;i++){const c=document.createElement("i");c.className="conf";c.style.left=Math.random()*100+"vw";c.style.background=["#00e5ff","#39ff88","#ffd400","#ff3d81"][i%4];c.style.animationDelay=Math.random()*1.2+"s";document.body.appendChild(c);setTimeout(()=>c.remove(),5000)}
+ show("s-end")}
+$("b-next").onclick=newRound;
+$("b-re").onclick=()=>{if(confirm("Mulai ronde baru? Ronde saat ini dibatalkan."))newRound()};
+$("b-exit").onclick=$("b-ex2").onclick=()=>{if(confirm("Keluar ke halaman awal? Skor akan hilang.")){over=true;show("s-home")}};
+try{const s=JSON.parse(localStorage.getItem("uc-names")||"null");if(Array.isArray(s)&&s.length>=3&&s.length<=12)names=s}catch(e){}
+</script></body></html>
